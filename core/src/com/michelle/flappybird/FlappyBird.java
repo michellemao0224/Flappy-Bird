@@ -7,6 +7,9 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Rectangle;
+
 
 import java.util.Random;
 
@@ -38,6 +41,9 @@ public class FlappyBird extends ApplicationAdapter {
 
 	Circle birdCircle;
 	ShapeRenderer shapeRenderer;
+	Rectangle[] topTubeRectangles;
+	Rectangle[] bottomTubeRectangles;
+
  	@Override
 	public void create () {
 		batch = new SpriteBatch();
@@ -51,10 +57,14 @@ public class FlappyBird extends ApplicationAdapter {
 		randomGenerator = new Random();
 		maxTubeOffset = Gdx.graphics.getHeight() / 2 - gap / 2 - 100;
 		distanceBetweenTubes = Gdx.graphics.getWidth() * 3 / 4;
+		topTubeRectangles = new Rectangle[numberOfTubes];
+		bottomTubeRectangles = new Rectangle[numberOfTubes];
 
 		for (int i = 0; i < numberOfTubes; i ++){
 			tubeOffset[i] = (randomGenerator.nextFloat() - 0.5f) * (Gdx.graphics.getHeight() - gap  - 200);
 			tubeX[i] = Gdx.graphics.getWidth() / 2 - toptube.getWidth() / 2 + i * distanceBetweenTubes;
+			topTubeRectangles[i] = new Rectangle();
+			bottomTubeRectangles[i] = new Rectangle();
 		}
 
 		birdCircle = new Circle();
@@ -84,6 +94,10 @@ public class FlappyBird extends ApplicationAdapter {
 				batch.draw(toptube, tubeX[i], Gdx.graphics.getHeight() / 2 + gap / 2 + tubeOffset[i]);
 				batch.draw(bottomtube, tubeX[i],
 						Gdx.graphics.getHeight() / 2 - gap / 2 - bottomtube.getHeight() + tubeOffset[i]);
+				//create rectangle to overlap each top or bottom tube
+				topTubeRectangles[i] = new Rectangle(tubeX[i], Gdx.graphics.getHeight() / 2 + gap / 2 + tubeOffset[i],toptube.getWidth(),toptube.getHeight());
+				bottomTubeRectangles[i] = new Rectangle(tubeX[i],
+						Gdx.graphics.getHeight() / 2 - gap / 2 - bottomtube.getHeight() + tubeOffset[i], bottomtube.getWidth(), bottomtube.getHeight());
 			}
 			if(birdY > 0 || velocity < 0) {
 				//Create gravity system
@@ -104,12 +118,23 @@ public class FlappyBird extends ApplicationAdapter {
 
 		batch.draw(birds[flappyState], Gdx.graphics.getWidth() / 2 - birds[flappyState].getWidth() / 2, birdY);
 		batch.end();
-
+		//create a circle to wrap the bird
 		birdCircle.set(Gdx.graphics.getWidth() / 2, birdY + birds[flappyState].getHeight() / 2, birds[flappyState].getWidth() / 2);
 
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 		shapeRenderer.setColor(Color.RED);
+
 		shapeRenderer.circle(birdCircle.x,birdCircle.y,birdCircle.radius);
+
+		for (int i = 0; i < numberOfTubes; i ++){
+			shapeRenderer.rect(tubeX[i], Gdx.graphics.getHeight() / 2 + gap / 2 + tubeOffset[i],toptube.getWidth(),toptube.getHeight());
+			shapeRenderer.rect(tubeX[i],
+					Gdx.graphics.getHeight() / 2 - gap / 2 - bottomtube.getHeight() + tubeOffset[i], bottomtube.getWidth(), bottomtube.getHeight());
+			//check whether circle and rectangle overlaps
+			if(Intersector.overlaps(birdCircle,topTubeRectangles[i]) || Intersector.overlaps(birdCircle,bottomTubeRectangles[i])){
+				Gdx.app.log("Collision", "Yup!");
+		}
+		}
 		shapeRenderer.end();
 	}
 	
