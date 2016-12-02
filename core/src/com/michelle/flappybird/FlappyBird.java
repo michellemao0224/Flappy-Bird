@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
@@ -46,6 +47,7 @@ public class FlappyBird extends ApplicationAdapter {
 
 	int score = 0;
 	int scoringTube = 0;
+	BitmapFont font;
 
  	@Override
 	public void create () {
@@ -72,6 +74,9 @@ public class FlappyBird extends ApplicationAdapter {
 
 		birdCircle = new Circle();
 		//shapeRenderer = new ShapeRenderer();
+		font = new BitmapFont();
+		font.setColor(Color.WHITE);
+		font.getData().setScale(10);
 	}
 
 	@Override
@@ -129,6 +134,7 @@ public class FlappyBird extends ApplicationAdapter {
 		}
 
 		batch.draw(birds[flappyState], Gdx.graphics.getWidth() / 2 - birds[flappyState].getWidth() / 2, birdY);
+		font.draw(batch,String.valueOf(score),100,200);
 		batch.end();
 		//create a circle to wrap the bird
 		birdCircle.set(Gdx.graphics.getWidth() / 2, birdY + birds[flappyState].getHeight() / 2, birds[flappyState].getWidth() / 2);
