@@ -19,6 +19,7 @@ public class FlappyBird extends ApplicationAdapter {
 	SpriteBatch batch;
 	Texture background;
 	Texture[] birds;
+	Texture gameover;
 
 	Texture toptube;
 	Texture bottomtube;
@@ -53,10 +54,11 @@ public class FlappyBird extends ApplicationAdapter {
 	public void create () {
 		batch = new SpriteBatch();
 		background = new Texture("bg.png");
+		gameover = new Texture("gameover.png");
 		birds = new Texture[2];
 		birds[0] = new Texture("bird.png");
 		birds[1] = new Texture("bird2.png");
-		birdY = Gdx.graphics.getHeight() / 2 - birds[0].getHeight() / 2;
+
 		toptube = new Texture("toptube.png");
 		bottomtube = new Texture("bottomtube.png");
 		randomGenerator = new Random();
@@ -65,12 +67,7 @@ public class FlappyBird extends ApplicationAdapter {
 		topTubeRectangles = new Rectangle[numberOfTubes];
 		bottomTubeRectangles = new Rectangle[numberOfTubes];
 
-		for (int i = 0; i < numberOfTubes; i ++){
-			tubeOffset[i] = (randomGenerator.nextFloat() - 0.5f) * (Gdx.graphics.getHeight() - gap  - 200);
-			tubeX[i] = Gdx.graphics.getWidth() / 2 - toptube.getWidth() / 2 + Gdx.graphics.getWidth()+ i * distanceBetweenTubes;
-			topTubeRectangles[i] = new Rectangle();
-			bottomTubeRectangles[i] = new Rectangle();
-		}
+		startGame();
 
 		birdCircle = new Circle();
 		//shapeRenderer = new ShapeRenderer();
@@ -79,14 +76,23 @@ public class FlappyBird extends ApplicationAdapter {
 		font.getData().setScale(10);
 	}
 
+	public void startGame(){
+		birdY = Gdx.graphics.getHeight() / 2 - birds[0].getHeight() / 2;
+		for (int i = 0; i < numberOfTubes; i ++){
+			tubeOffset[i] = (randomGenerator.nextFloat() - 0.5f) * (Gdx.graphics.getHeight() - gap  - 200);
+			tubeX[i] = Gdx.graphics.getWidth() / 2 - toptube.getWidth() / 2 + Gdx.graphics.getWidth()+ i * distanceBetweenTubes;
+			topTubeRectangles[i] = new Rectangle();
+			bottomTubeRectangles[i] = new Rectangle();
+		}
+	}
 	@Override
 	public void render () {// automatic loop
 		batch.begin();
 		batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		if(gameState != 0) {
+		if(gameState == 1) {
 			if(tubeX[scoringTube] < Gdx.graphics.getWidth() / 2){
 				score ++;
-				Gdx.app.log("Score", String.valueOf(score));
+				//Gdx.app.log("Score", String.valueOf(score));
 				if(scoringTube < numberOfTubes - 1){
 					scoringTube ++;
 				}else{
@@ -95,7 +101,7 @@ public class FlappyBird extends ApplicationAdapter {
 			}
 			if(Gdx.input.justTouched()){
 				//Gdx.app.log("Touched","Yep!");
-				velocity = -25;
+				velocity = -20;
 
 			}
 			for (int i = 0; i < numberOfTubes; i ++) {
@@ -116,15 +122,27 @@ public class FlappyBird extends ApplicationAdapter {
 				bottomTubeRectangles[i] = new Rectangle(tubeX[i],
 						Gdx.graphics.getHeight() / 2 - gap / 2 - bottomtube.getHeight() + tubeOffset[i], bottomtube.getWidth(), bottomtube.getHeight());
 			}
-			if(birdY > 0 || velocity < 0) {
+			if(birdY > 0 ) {
 				//Create gravity system
 				velocity = velocity + gravity;
 				birdY -= velocity;
+			}else {
+				gameState = 2;
 			}
-		} else{
+		} else if (gameState == 0){
 			if(Gdx.input.justTouched()){
 				//Gdx.app.log("Touched","Yep!");
 				gameState = 1;//touch the screen & restart the game
+			}
+		} else if (gameState == 2){
+			batch.draw(gameover, Gdx.graphics.getWidth() / 2 - gameover.getWidth() / 2, Gdx.graphics.getHeight() / 2 - gameover.getHeight() / 2);
+			if(Gdx.input.justTouched()){
+				//Gdx.app.log("Touched","Yep!");
+				gameState = 1;//touch the screen & restart the game
+				startGame();
+				score = 0;
+				scoringTube = 0;
+				velocity = 0;
 			}
 		}
 		if (flappyState == 0) {
@@ -150,7 +168,8 @@ public class FlappyBird extends ApplicationAdapter {
 					//Gdx.graphics.getHeight() / 2 - gap / 2 - bottomtube.getHeight() + tubeOffset[i], bottomtube.getWidth(), bottomtube.getHeight());
 			//check whether circle and rectangle overlaps
 			if(Intersector.overlaps(birdCircle,topTubeRectangles[i]) || Intersector.overlaps(birdCircle,bottomTubeRectangles[i])){
-				Gdx.app.log("Collision", "Yup!");
+				//Gdx.app.log("Collision", "Yup!");
+				gameState = 2;// game is over
 		}
 		}
 		//shapeRenderer.end();
